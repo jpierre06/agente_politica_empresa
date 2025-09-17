@@ -1,14 +1,27 @@
 import streamlit as st
 
-from scripts.RAG import triagem, resposta, obter_api_key
-from scripts.workflow import criar_workflow, AgentState 
-
-grafo = criar_workflow(AgentState)
-
+from scripts.workflow import Workflow 
+from scripts.tools import obter_api_key
 
 
 # --- INTERFACE WEB ---
 st.title("Agente de IA de Políticas Internas")
+
+# Obter API Key
+api_key = obter_api_key()
+
+if not api_key:
+    with st.sidebar:  
+        api_key_app = st.text_input("Gemini API Key", key="chatbot_api_key", type="password")
+        "[Get an Gemini API key](https://aistudio.google.com/app/apikey)"
+
+    api_key = api_key_app
+            
+
+# Inicializa o workflow
+workflow = Workflow(api_key)
+grafo = workflow.criar_workflow()
+
 
 pergunta_usuario = st.text_input("Digite sua dúvida sobre políticas internas:")
 
