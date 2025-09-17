@@ -1,0 +1,11 @@
+langchain
+langchain-google-genai
+google-generativeai
+langchain-experimental
+streamlit
+python-dotenv
+langgraph
+langchain_community 
+faiss-cpu 
+langchain-text-splitters 
+pymupdf

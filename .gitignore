@@ -1,0 +1,22 @@
+# Ignorar arquivo de variáveis de ambientes
+.env
+
+# Ignorar arquivos de configuração do editor
+.vscode/
+.idea/
+
+# Ignorar arquivos de teste
+test/
+
+# Ignorar apenas arquivos .zip dentro do diretório data e seus subdiretórios
+data/**/*.zip
+
+# Ignorar arquivos de cache do ChromaDB
+data/cache/
+
+# Ignorar arquivos de cache
+core/__pycache__/*
+
+
+# Ignorar arquivos de log
+logs/*
