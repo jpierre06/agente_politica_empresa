@@ -14,6 +14,9 @@ data/**/*.zip
 # Ignorar arquivos de cache do ChromaDB
 data/cache/
 
+# Ignorar arquivos de dados
+data/
+
 # Ignorar arquivos de cache
 __pycache__/
 scripts/__pycache__/

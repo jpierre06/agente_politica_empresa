@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 from typing import TypedDict, Optional, List, Dict, Literal
@@ -6,16 +5,13 @@ from pydantic import BaseModel, Field
 import re
 
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_community.document_loaders import PyMuPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Bibliotecas locais
 from scripts.tools import clean_text
+from scripts.persist_vetorial_db import PersistVetorialDB
 
 
 class TriagemOut(BaseModel):
@@ -58,11 +54,10 @@ class AgentAction:
             '- **ABRIR_CHAMADO**: Pedidos de exceção, liberação, aprovação ou acesso especial, ou quando o usuário explicitamente pede para abrir um chamado (Ex: "Quero exceção para trabalhar 5 dias remoto.", "Solicito liberação para anexos externos.", "Por favor, abra um chamado para o RH.").'
             "Analise a mensagem e decida a ação mais apropriada."
         )
-
+        
         self.KEYWORDS_ABRIR_TICKET = ["aprovação", "exceção", "liberação", "abrir ticket", "abrir chamado", "acesso especial"]
         
-        self.path_politicas = './data/stage/unprocessed'
-        print(f'Diretório com as políticas da empresa: {self.path_politicas}')
+        self.path_politicas_unprocessed = './data/stage/unprocessed'
 
 
     def triagem(self, mensagem: str) -> Dict:
@@ -118,10 +113,8 @@ class AgentAction:
 
 
     def perguntar_politica_RAG(self, pergunta: str) -> Dict:
-        # chunks recuperados do banco vetorial de acordo com a pergunda do usuário
-        retriever = self.criar_retriever()
 
-        docs_relacionados = retriever.invoke(pergunta)
+        docs_relacionados = self.criar_retriever(pergunta)
 
         # Se na base de dados não houver nenhum documento que referencie a pergunta
         # é retornado não sei
@@ -162,59 +155,20 @@ class AgentAction:
         return llm_triagem
 
 
-    def criar_chunks(self):
-        # Carrega os documentos de políticas internas da empresa
+    def criar_retriever(self, texto):
 
-        docs = []
-        lista_arquivos = Path(self.path_politicas).glob("*.pdf")
+        db = PersistVetorialDB(self.GOOGLE_API_KEY)
+        search_type="similarity_score_threshold"
+        score_threshold = 0.3
+        k = 4
 
-        # Converte cada arquivo pdf encontrado na lista de arquivos para TXT
-        for n in lista_arquivos:
-            try:
-                loader = PyMuPDFLoader(str(n))
-                docs.extend(loader.load())
-                print(f"Carregado com sucesso arquivo {n.name}")
+        lista_arquivos = list(Path(self.path_politicas_unprocessed).glob("*.pdf"))
+        
+        if len(lista_arquivos) > 0:
+            db.criar_db()
 
-            except Exception as e:
-                print(f"Erro ao carregar arquivo {n.name}: {e}")
+        retriever = db.consultar_faiss_por_texto(texto, search_type=search_type, k=k, score_threshold=score_threshold)
 
-        print(f"Total de documentos carregados: {len(docs)}")
-
-
-        # Overlap permite que os últimos 30 caracteres do chuck anterior faça parte do
-        # próximo chunk para evitar que uma ideia se perca em um chunk
-        splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=30)
-
-        chunks = splitter.split_documents(docs)
-        print(f'Foram criados {len(chunks)} chunks')
-
-        return chunks
-
-
-    def criar_retriever(self):
-
-        # TODO: Persistir o banco vetorial em disco
-        # TODO: Consultar banco vetorial em disco
-
-        # Criação do objeto com os parâmetros de criação dos vetores
-        embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/gemini-embedding-001",
-            google_api_key=self.GOOGLE_API_KEY
-        )
-
-        # Criação da base de dados vetorial com o embeddings e chunks
-        chunks = self.criar_chunks()
-        vectorstore = FAISS.from_documents(chunks, embeddings)
-
-        # Defini o grau de similaridade entre o termo pesquisado e o chunks armazendos
-        # no banco vetorial do FAISS. Retorna apenas as 4 primeiras correspondências.
-        # "score_threshold" seria um índice de divergência,
-        # ou seja divergência de 0.3 ou similiridade de 0.7
-        # o conceito inverso? similiridade de 0.3 e divergência de 0.7
-        retriever = vectorstore.as_retriever(
-            search_type="similarity_score_threshold",
-            search_kwargs={"score_threshold":0.3, "k": 4}
-        )
         return retriever
 
 
