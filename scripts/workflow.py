@@ -74,16 +74,16 @@ class Workflow:
         print("Decidindo após o auto_resolver...")
 
         if state.get("rag_sucesso"):
-            print("Rag com sucesso, finalizando o fluxo.")
+            print("RAG executado com sucesso, finalizando o fluxo.")
             return "ok"
 
         state_da_pergunta = (state["pergunta"] or "").lower()
 
         if any(k in state_da_pergunta for k in self.agent_action.KEYWORDS_ABRIR_TICKET):
-            print("Rag falhou, mas foram encontradas keywords de abertura de ticket. Abrindo...")
+            print("RAG falhou, mas foram encontradas keywords de abertura de ticket. Abrindo...")
             return "chamado"
 
-        print("Rag falhou, sem keywords, vou pedir mais informações...")
+        print("RAG falhou, sem keywords, vou pedir mais informações...")
         return "info"
 
 

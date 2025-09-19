@@ -33,11 +33,16 @@ with col1:
     if st.button("Obter Resposta") and pergunta_usuario:
         with st.spinner("Analisando sua pergunta..."):
             resposta_final = grafo.invoke({"pergunta": pergunta_usuario})
+            triagem = resposta_final.get("triagem", {})
+            decisao = (f"DECISÃO: {triagem.get('decisao')} \n URGÊNCIA: {triagem.get('urgencia')} \n AÇÃO FINAL: {resposta_final.get('acao_final')}")
 
         # Exibe a resposta e as citações
+        st.subheader("Decisão da Triagem")
+        st.write(decisao)
+
         st.subheader("Resposta")
         st.write(resposta_final.get("resposta"))
-
+        
         if resposta_final.get("citacoes"):
             st.subheader("Citações")
             for citacao in resposta_final.get("citacoes"):
