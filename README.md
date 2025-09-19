@@ -62,7 +62,7 @@ Os arquivos de Políticas Internas utilizado no projeto são fictícios e não d
 5. Acesse a interface web em `http://localhost:8501`.
 
 6. Porta alternativa
-   * Por padrão o Streamlit executa na porta 8501. Caso queira executar a aplicação eu uma porta alternativa execute:
+   * Por padrão o Streamlit executa na porta 8501. Caso queira executar a aplicação em uma porta alternativa execute:
 
    ```bash
    python -m streamlit run app.py --server.port=8502 --server.address=0.0.0.0
@@ -86,7 +86,7 @@ Os arquivos de Políticas Internas utilizado no projeto são fictícios e não d
 - `langchain` – framework de de LLMs
 - `langgraph` – framework de fluxos de agentes de IA
 - `faiss-cpu` – mecanismo de banco de dados vetorial
-- `google-generativeai` – api de IG Gen da Google
+- `google-generativeai` – api de IA Gen da Google
 
 <br>
 
@@ -98,11 +98,12 @@ Atualmente o `.gitignore` está configurado para não gerenciar o conteúdo do d
 
 * ### Caso queria publicar as políticas no formato .PDF para posterior processamento, remover ou comentar a linha abaixo no `.gitignore`
 
-data/stage/unprocessed/
+`data/stage/unprocessed/`
 
 * ### Caso queria publicar as políticas em banco de dados de vetor do FAISS, remover ou comentar a linha abaixo no `.gitignore`
 
-data/faiss_store/
+`data/faiss_store/`
+
 
 <br>
 
