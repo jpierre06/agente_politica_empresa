@@ -11,11 +11,11 @@ test/
 # Ignorar apenas arquivos .zip dentro do diretório data e seus subdiretórios
 data/**/*.zip
 
-# Ignorar arquivos de cache do ChromaDB
-data/cache/
-
 # Ignorar arquivos de dados
-data/
+data/faiss_store/
+data/stage/processed/
+data/stage/unprocessed/
+data/stage/error_processed/
 
 # Ignorar arquivos de cache
 __pycache__/
