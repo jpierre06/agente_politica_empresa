@@ -1,10 +1,10 @@
-
 import logging
 from pathlib import Path
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter  
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
 from scripts.tools import mover_arquivos
 
 # Configuração básica do logging
@@ -36,15 +36,13 @@ class PersistVetorialDB:
             except Exception as e:
                 logging.error(f'Erro ao criar base vetorial: {e}')
                 # Falha: mover para error_processed com timestamp
-                
-                # TODO: Descomentar a linha abaixo
-                # mover_arquivos(lista_arquivos, self.path_politicas_error_processed, erro=True)
+                mover_arquivos(lista_arquivos, self.path_politicas_error_processed, erro=True)
 
 
     def criar_chunks(self, lista_arquivos):
         # Carrega os documentos de políticas internas da empresa
-
         docs = []
+        
         # Converte cada arquivo pdf encontrado na lista de arquivos para TXT
         for n in lista_arquivos:
             try:
@@ -61,6 +59,7 @@ class PersistVetorialDB:
         splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=30)
         chunks = splitter.split_documents(docs)
         logging.info(f'Foram criados {len(chunks)} chunks')
+
         return chunks
 
 
