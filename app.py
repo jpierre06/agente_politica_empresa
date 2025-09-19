@@ -1,10 +1,23 @@
-import streamlit as st
 
+import logging
+import io
+import streamlit as st
 from scripts.workflow import Workflow 
 from scripts.tools import obter_api_key
 
 
-# --- INTERFACE WEB ---
+
+# --- LOGGING PARA STREAMLIT ---
+log_buffer = io.StringIO()
+handler = logging.StreamHandler(log_buffer)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+handler.setFormatter(formatter)
+root_logger = logging.getLogger()
+if not any(isinstance(h, logging.StreamHandler) and h.stream == log_buffer for h in root_logger.handlers):
+    root_logger.addHandler(handler)
+root_logger.setLevel(logging.INFO)
+
 st.title("Agente de IA de Políticas Internas")
 
 # Obter API Key
@@ -33,8 +46,13 @@ with col1:
     if st.button("Obter Resposta") and pergunta_usuario:
         with st.spinner("Analisando sua pergunta..."):
             resposta_final = grafo.invoke({"pergunta": pergunta_usuario})
+            triagem = resposta_final.get("triagem", {})
+            decisao = (f"DECISÃO: {triagem.get('decisao')} \n URGÊNCIA: {triagem.get('urgencia')} \n AÇÃO FINAL: {resposta_final.get('acao_final')}")
 
         # Exibe a resposta e as citações
+        st.subheader("Decisão da Triagem")
+        st.write(decisao)
+
         st.subheader("Resposta")
         st.write(resposta_final.get("resposta"))
 
@@ -53,3 +71,16 @@ with col1:
 with col2:
     if st.button("Limpar"):
         st.subheader("")    
+
+# Caixa de seleção para exibir logs
+exibir_logs = st.checkbox("Exibir logs da aplicação", value=False)
+if exibir_logs:
+    st.subheader("Logs da aplicação")
+    st.text_area(
+        label="Inicio dos Logs", 
+        value=log_buffer.getvalue(), 
+        height=100, 
+        max_chars=None, 
+        key="log_text_area",
+        disabled=True
+    )
