@@ -104,6 +104,7 @@ Atualmente o `.gitignore` está configurado para não gerenciar o conteúdo do d
 
 `data/faiss_store/`
 
+
 <br>
 
 
