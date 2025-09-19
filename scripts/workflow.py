@@ -1,10 +1,11 @@
+import logging
+
 from langgraph.graph import StateGraph, START, END
 
 from scripts.agent import AgentState, AgentAction
 
-
-# KEYWORDS_ABRIR_TICKET, triagem, perguntar_politica_RAG
-
+# Configuração básica do logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
 class Workflow:
 
@@ -14,13 +15,15 @@ class Workflow:
 
 
     def node_triagem(self, state: AgentState) -> AgentState:
-        print("Executando nó de triagem...")
+        #print("Executando nó de triagem...")
+        logging.info(f"Executando nó de triagem...")
         # state isntância do tipo AgentState
         return {"triagem": self.agent_action.triagem(state["pergunta"])}
 
     
     def node_auto_resolver(self, state: AgentState) -> AgentState:
-        print("Executando nó de auto_resolver...")
+        #print("Executando nó de auto_resolver...")
+        logging.info(f"Executando nó de auto_resolver...")
         resposta_rag = self.agent_action.perguntar_politica_RAG(state["pergunta"])
 
         update: AgentState = {
@@ -36,7 +39,8 @@ class Workflow:
 
     
     def node_pedir_info(self, state: AgentState) -> AgentState:
-        print("Executando nó de pedir_info...")
+        #print("Executando nó de pedir_info...")
+        logging.info(f"Executando nó de pedir_info...")
         faltantes = state["triagem"].get("campos_faltantes", [])
         if faltantes:
             detalhe = ",".join(faltantes)
@@ -51,7 +55,8 @@ class Workflow:
     
 
     def node_abrir_chamado(self, state: AgentState) -> AgentState:
-        print("Executando nó de abrir_chamado...")
+        #print("Executando nó de abrir_chamado...")
+        logging.info(f"Executando nó de abrir_chamado...")
         triagem = state["triagem"]
 
         return {
@@ -62,7 +67,8 @@ class Workflow:
 
 
     def decidir_pos_triagem(self, state: AgentState) -> str:
-        print("Decidindo após a triagem...")
+        #print("Decidindo após a triagem...")
+        logging.info(f"Decidindo após a triagem...")
         decisao = state["triagem"]["decisao"]
 
         if decisao == "AUTO_RESOLVER": return "auto"
@@ -71,19 +77,23 @@ class Workflow:
 
 
     def decidir_pos_auto_resolver(self, state: AgentState) -> str:
-        print("Decidindo após o auto_resolver...")
+        #print("Decidindo após o auto_resolver...")
+        logging.info(f"Decidindo após a auto_resolver...")
 
         if state.get("rag_sucesso"):
-            print("RAG executado com sucesso, finalizando o fluxo.")
+            #print("RAG executado com sucesso, finalizando o fluxo.")
+            logging.info(f"RAG executado com sucesso, finalizando o fluxo.")
             return "ok"
 
         state_da_pergunta = (state["pergunta"] or "").lower()
 
         if any(k in state_da_pergunta for k in self.agent_action.KEYWORDS_ABRIR_TICKET):
-            print("RAG falhou, mas foram encontradas keywords de abertura de ticket. Abrindo...")
+            #print("RAG falhou, mas foram encontradas keywords de abertura de ticket. Abrindo...")
+            logging.warning(f"RAG falhou, mas foram encontradas keywords de abertura de ticket. Abrindo...")
             return "chamado"
 
-        print("RAG falhou, sem keywords, vou pedir mais informações...")
+        #print("RAG falhou, sem keywords, vou pedir mais informações...")
+        logging.error(f"RAG falhou, sem keywords, vou pedir mais informações...")
         return "info"
 
 
