@@ -1,11 +1,14 @@
+import logging
 from pathlib import Path
-
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter  
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 from scripts.tools import mover_arquivos
+
+# Configuração básica do logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
 
 class PersistVetorialDB:
@@ -31,16 +34,13 @@ class PersistVetorialDB:
                 # Sucesso: mover para processed
                 mover_arquivos(lista_arquivos, self.path_politicas_processed, erro=False)
             except Exception as e:
-                print(f'Erro ao criar base vetorial: {e}')
+                logging.error(f'Erro ao criar base vetorial: {e}')
                 # Falha: mover para error_processed com timestamp
-                
-                # TODO: Descomentar a linha abaixo
-                # mover_arquivos(lista_arquivos, self.path_politicas_error_processed, erro=True)
+                mover_arquivos(lista_arquivos, self.path_politicas_error_processed, erro=True)
 
 
     def criar_chunks(self, lista_arquivos):
         # Carrega os documentos de políticas internas da empresa
-
         docs = []
         
         # Converte cada arquivo pdf encontrado na lista de arquivos para TXT
@@ -48,20 +48,17 @@ class PersistVetorialDB:
             try:
                 loader = PyMuPDFLoader(str(n))
                 docs.extend(loader.load())
-                print(f"Carregado com sucesso arquivo {n.name}")
-
+                logging.info(f"Carregado com sucesso arquivo {n.name}")
             except Exception as e:
-                print(f"Erro ao carregar arquivo {n.name}: {e}")
+                logging.error(f"Erro ao carregar arquivo {n.name}: {e}")
 
-        print(f"Total de documentos carregados: {len(docs)}")
-
+        logging.info(f"Total de documentos carregados: {len(docs)}")
 
         # Overlap permite que os últimos 30 caracteres do chuck anterior faça parte do
         # próximo chunk para evitar que uma ideia se perca em um chunk
         splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=30)
-
         chunks = splitter.split_documents(docs)
-        print(f'Foram criados {len(chunks)} chunks')
+        logging.info(f'Foram criados {len(chunks)} chunks')
 
         return chunks
 
@@ -77,12 +74,12 @@ class PersistVetorialDB:
         faiss_path = self.faiss_dir
         #faiss_path.mkdir(parents=True, exist_ok=True)
         try:
-            print('Criando index FAISS a partir dos documentos...')
+            logging.info('Criando index FAISS a partir dos documentos...')
             vectorstore = FAISS.from_documents(chunks, embeddings)
             vectorstore.save_local(str(faiss_path))
-            print(f'Índice FAISS salvo em: {faiss_path}')
+            logging.info(f'Índice FAISS salvo em: {faiss_path}')
         except Exception as e:
-            print(f'Erro ao salvar índice FAISS: {e}')
+            logging.error(f'Erro ao salvar índice FAISS: {e}')
 
 
     def consultar_faiss_por_texto(self, texto, search_type="similarity_score_threshold", k=4, score_threshold=0.3):
@@ -98,7 +95,7 @@ class PersistVetorialDB:
         faiss_path = Path(self.faiss_dir)
         try:
             if not any(faiss_path.iterdir()):
-                print('Base FAISS não encontrada.')
+                logging.warning('Base FAISS não encontrada.')
                 return []
             vectorstore = FAISS.load_local(str(faiss_path), embeddings, allow_dangerous_deserialization=True)
             retriever = vectorstore.as_retriever(
@@ -108,5 +105,5 @@ class PersistVetorialDB:
             resultados = retriever.invoke(texto)
             return resultados
         except Exception as e:
-            print(f'Erro ao consultar FAISS: {e}')
+            logging.error(f'Erro ao consultar FAISS: {e}')
             return []
