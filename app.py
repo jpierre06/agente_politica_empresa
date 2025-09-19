@@ -47,11 +47,15 @@ with col1:
         with st.spinner("Analisando sua pergunta..."):
             resposta_final = grafo.invoke({"pergunta": pergunta_usuario})
             triagem = resposta_final.get("triagem", {})
-            decisao = (f"DECISÃO: {triagem.get('decisao')} \n URGÊNCIA: {triagem.get('urgencia')} \n AÇÃO FINAL: {resposta_final.get('acao_final')}")
+            triagem_decisao = (f"DECISÃO: {triagem.get('decisao')}")
+            triagem_urgencia = (f"URGÊNCIA: {triagem.get('urgencia')}")
+            triagem_acao_final = (f"AÇÃO FINAL: {resposta_final.get('acao_final')}")
 
         # Exibe a resposta e as citações
         st.subheader("Decisão da Triagem")
-        st.write(decisao)
+        st.write(triagem_decisao)
+        st.write(triagem_urgencia)
+        st.write(triagem_acao_final)
 
         st.subheader("Resposta")
         st.write(resposta_final.get("resposta"))
