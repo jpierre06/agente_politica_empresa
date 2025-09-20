@@ -10,10 +10,12 @@ def obter_api_key(value_env = "GOOGLE_API_KEY") -> str:
     # Carrega as variáveis do arquivo .env
     load_dotenv()
 
-    # Lê a sua chave da variável de ambiente
-    api_key = os.getenv(value_env)
-
-    return api_key
+    try:
+        # Lê a sua chave da variável de ambiente
+        api_key = os.getenv(value_env)
+        return api_key
+    except Exception as e:
+        return None
 
 
 def clean_text(s: str) -> str:
